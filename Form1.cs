@@ -175,6 +175,47 @@ namespace PracticaTehnologica
 
         private void button14_Click(object sender, EventArgs e)
         {
+            using (SaveFileDialog saveFileDialog = new SaveFileDialog())
+            {
+                saveFileDialog.Filter = "Backup Files (*.bak)|*.bak";
+                saveFileDialog.Title = "Selectează locația de salvare pentru backup";
+
+                if (saveFileDialog.ShowDialog() == DialogResult.OK)
+                {
+
+                    string backupPath = saveFileDialog.FileName;
+
+
+                    string connectionString = @"Data Source=DESKTOP-9LE00L5; Database=GestiuneAngajati; Trusted_Connection=yes;";
+
+                    string backupCommand = $@"
+                        BACKUP DATABASE GestiuneAngajati
+                        TO DISK = '{backupPath}'
+                        WITH FORMAT,
+                            MEDIANAME = 'SQLServerBackups',
+                            NAME = 'Full Backup of GestiuneAngajati';";
+
+                    try
+                    {
+                        using (SqlConnection connection = new SqlConnection(connectionString))
+                        {
+                            connection.Open();
+
+                            using (SqlCommand command = new SqlCommand(backupCommand, connection))
+                            {
+                                command.ExecuteNonQuery();
+                                MessageBox.Show("Backup-ul bazei de date a fost realizat cu succes!", "Succes", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Eroare la realizarea backup-ului: {ex.Message}", "Eroare", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+            }
+
+
             this.Close();
         }
 
@@ -278,7 +319,11 @@ namespace PracticaTehnologica
                 sarcina3.MdiParent = this;
                 sarcina3.Dock = DockStyle.Fill;
                 sarcina3.Show();
-                DisableRegularUserFeatures();
+                if(tipUtilizator == "regular user")
+                {
+                    DisableRegularUserFeatures();
+                }
+               
             }
             else
             {
@@ -475,7 +520,7 @@ namespace PracticaTehnologica
         {
 
         }
-
+        string tipUtilizator;
         private void button4_Click(object sender, EventArgs e)
         {
             string numeUtilizator = textBox1.Text;
@@ -499,7 +544,7 @@ namespace PracticaTehnologica
                     object result = command.ExecuteScalar();
                     if (result != null)
                     {
-                        string tipUtilizator = result.ToString();
+                        tipUtilizator = result.ToString();
                         if (tipUtilizator == "admin")
                         {
                             MessageBox.Show("Autentificare reușită! Aveți acces complet.");
